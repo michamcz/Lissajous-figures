@@ -7,28 +7,22 @@ const boxWidth = 500;
 const boxHeight = 500;
 const radius = 30;
 const diameter = radius * 2;
-const circlesCount = 5;
+const circlesCount = 10;
 
-class PatternCircle {
-  static #patternCirclesTop = [];
-  static #patternCirclesLeft = [];
-  static #initialSpeed = 0;
+class LissajousCollection {
 
-  static getPatternCircles() {
-    return [this.#patternCirclesTop, this.#patternCirclesLeft];
-  }
+  #patternCirclesTop = [];
+  #patternCirclesLeft = [];
+  #curvesTab = [];
 
-  static initPatternCircles(count, initialSpeed) {
-    if (this.#initialSpeed === 0) {
-      this.#initialSpeed = initialSpeed;
-    }
+  initPatternCircles(count, initialSpeed = 1) {
     if (this.#patternCirclesLeft.length === 0) {
       for (let i = 0; i < count; i++) {
         this.#patternCirclesLeft.push(
           new PatternCircle(
             radius,
             2 * diameter + (diameter + 20) * i,
-            i + initialSpeed
+            i * initialSpeed + initialSpeed
           )
         );
         this.#patternCirclesTop.push(
@@ -42,6 +36,28 @@ class PatternCircle {
     }
   }
 
+  getPatternCircles() {
+    return [this.#patternCirclesTop, this.#patternCirclesLeft];
+  }
+
+  initCurves(count) {
+    for (let i = 0; i < count; i++) {
+      this.#curvesTab[i] = new Array(count);
+    }
+
+    for (let i = 0; i < count; i++) {
+      for (let j = 0; j < count; j++) {
+        this.#curvesTab[i][j] = new Curve();
+      }
+    }
+  }
+
+  getCurves() {
+    return this.#curvesTab;
+  }
+}
+
+class PatternCircle {
   x = 0;
   y = 0;
   angle = Math.PI / 2;
@@ -78,47 +94,40 @@ class PatternCircle {
 }
 
 class Curve {
-  static #curvesTab = [];
-  static initCurves(count) {
-    for (let i = 0; i < count; i++) {
-      this.#curvesTab[i] = new Array(count);
-    }
-
-    for (let i = 0; i < count; i++) {
-      for (let j = 0; j < count; j++) {
-        this.#curvesTab[i][j] = new Curve();
-      }
-    }
-  }
-  static getCurves() {
-    return this.#curvesTab;
-  }
   x = 100;
   y = 100;
+  angle = 0;
   #pathPointsTab = [];
   #pointsSkip = 5;
+
   #drawPath() {
+    this.angle += 0.02;
     this.#pointsSkip -= 1;
     if (this.#pointsSkip <= 0) {
       this.#pathPointsTab.push({ x: this.x, y: this.y });
-      this.#pointsSkip = 5;
+      this.#pointsSkip = 1;
     }
     ctx.beginPath();
     ctx.lineWidth = 1;
     ctx.strokeStyle = "white";
-    ctx.moveTo(this.x, this.y);
     this.#pathPointsTab.forEach(({ x, y }) => {
       ctx.lineTo(x, y);
     });
     ctx.stroke();
   }
-  clearPath() {
+
+  #clearPath() {
+    this.angle = 0;
     this.#pathPointsTab = [];
   }
+
   drawCurvePoint(x, y) {
     this.x = x;
     this.y = y;
-    this.#drawPath();
+    if (this.angle >= 2 * Math.PI) {
+      this.#clearPath();
+    }
+    else this.#drawPath();
     ctx.beginPath();
     ctx.fillStyle = "yellow";
     ctx.arc(this.x, this.y, 5, 0, 2 * Math.PI);
@@ -127,19 +136,16 @@ class Curve {
 }
 
 //Initialization
-PatternCircle.initPatternCircles(circlesCount, 0.8);
-Curve.initCurves(circlesCount);
+const Lissajous = new LissajousCollection();
+Lissajous.initPatternCircles(circlesCount, 1);
+Lissajous.initCurves(circlesCount);
 
 (function loop() {
   ctx.fillStyle = "rgba(50,50,50,0.5)";
   ctx.fillRect(0, 0, width, height);
-  const count = PatternCircle.getPatternCircles()[0].length;
-  const [CirclesTop, CirclesLeft] = PatternCircle.getPatternCircles();
-  const curves = Curve.getCurves();
-
-  for (let i = 0; i < count; i++) {
-    curves[i].forEach((curve) => curve.clearPath());
-  }
+  const count = Lissajous.getPatternCircles()[0].length;
+  const [CirclesTop, CirclesLeft] = Lissajous.getPatternCircles();
+  const curves = Lissajous.getCurves();
 
   for (let i = 0; i < count; i++) {
     CirclesTop[i].show();
@@ -149,6 +155,5 @@ Curve.initCurves(circlesCount);
       curves[i][j].drawCurvePoint(CirclesTop[i].x, CirclesLeft[j].y);
     }
   }
-
   requestAnimationFrame(loop);
 })();
