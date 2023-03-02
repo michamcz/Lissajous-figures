@@ -5,9 +5,9 @@ const height = (canvas.height = window.innerHeight);
 
 const boxWidth = 500;
 const boxHeight = 500;
-const radius = 30;
+const radius = 35;
 const diameter = radius * 2;
-const circlesCount = 10;
+const circlesCount = 7;
 
 class LissajousCollection {
 
@@ -17,19 +17,19 @@ class LissajousCollection {
 
   initPatternCircles(count, initialSpeed = 1) {
     if (this.#patternCirclesLeft.length === 0) {
-      for (let i = 0; i < count; i++) {
+      for (let i = 1; i <= count; i++) {
         this.#patternCirclesLeft.push(
           new PatternCircle(
             radius,
-            2 * diameter + (diameter + 20) * i,
-            i * initialSpeed + initialSpeed
+            diameter + (diameter + 20) * i,
+            i * initialSpeed
           )
         );
         this.#patternCirclesTop.push(
           new PatternCircle(
-            2 * diameter + (diameter + 20) * i,
+            diameter + (diameter + 20) * i,
             radius,
-            i + initialSpeed
+            i * initialSpeed
           )
         );
       }
@@ -70,8 +70,8 @@ class PatternCircle {
 
   #drawTrail() {
     ctx.beginPath();
-    ctx.lineWidth = 1;
-    ctx.strokeStyle = "white";
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = "green";
     ctx.arc(this.xCenter, this.yCenter, radius, 0, 2 * Math.PI);
     ctx.stroke();
   }
@@ -82,7 +82,7 @@ class PatternCircle {
     this.y =
       this.yCenter + radius * Math.cos((this.angle -= 0.01 * this.speed));
     ctx.beginPath();
-    ctx.fillStyle = "green";
+    ctx.fillStyle = "purple";
     ctx.arc(this.x, this.y, 5, 0, 2 * Math.PI);
     ctx.fill();
   }
@@ -94,22 +94,22 @@ class PatternCircle {
 }
 
 class Curve {
-  x = 100;
-  y = 100;
+  x = 0;
+  y = 0;
   angle = 0;
   #pathPointsTab = [];
-  #pointsSkip = 5;
+  #pointsSkip = 2;
 
   #drawPath() {
-    this.angle += 0.02;
+    this.angle += 0.01;
     this.#pointsSkip -= 1;
     if (this.#pointsSkip <= 0) {
       this.#pathPointsTab.push({ x: this.x, y: this.y });
-      this.#pointsSkip = 1;
+      this.#pointsSkip = 2;
     }
     ctx.beginPath();
-    ctx.lineWidth = 1;
-    ctx.strokeStyle = "white";
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = "lightblue";
     this.#pathPointsTab.forEach(({ x, y }) => {
       ctx.lineTo(x, y);
     });
@@ -129,7 +129,7 @@ class Curve {
     }
     else this.#drawPath();
     ctx.beginPath();
-    ctx.fillStyle = "yellow";
+    ctx.fillStyle = "lime";
     ctx.arc(this.x, this.y, 5, 0, 2 * Math.PI);
     ctx.fill();
   }
@@ -137,7 +137,7 @@ class Curve {
 
 //Initialization
 const Lissajous = new LissajousCollection();
-Lissajous.initPatternCircles(circlesCount, 1);
+Lissajous.initPatternCircles(circlesCount, 0.5);
 Lissajous.initCurves(circlesCount);
 
 (function loop() {
